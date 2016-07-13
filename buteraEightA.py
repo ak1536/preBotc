@@ -23,10 +23,10 @@ class Rhs(object):
         s.gNaBar = 28.0     # nS
         s.gLBar = 2.8       # nS
         s.EL = -65.0        # mV 
-        s.Iapp = 0.0        # pA; Zero unless otherwise noted
+        s.Iapp = 10.0        # pA; Zero unless otherwise noted
         s.C = 21.0          # pF
-        s.taubarh = 10000.  # mS
-        s.taubarn = 10.     # mS
+        s.tauBarh = 10.     # s
+        s.tauBarn = 0.010   # s
         s.thetah = -48.0    # mV
         s.thetan = -29.0    # mV
         s.thetamNaP = -40.0 # mV
@@ -39,8 +39,8 @@ class Rhs(object):
    
     def rhs(self, V, h, n):
         s = self
-        tauhV = s.taubarh / (np.cosh((V - s.thetah) / 2 / s.sigmah))     
-        taunV = s.taubarn / (np.cosh((V - s.thetan) / 2 / s.sigman)) 
+        tauhV = s.tauBarh / (np.cosh((V - s.thetah) / 2 / s.sigmah))     
+        taunV = s.tauBarn / (np.cosh((V - s.thetan) / 2 / s.sigman)) 
         hinfV = expit((s.thetah - V) / s.sigmah)
         minfNaPV = expit((s.thetamNaP - V) / s.sigmamNaP)
         minfNaV = expit((s.thetamNa - V) / s.sigmamNa)
