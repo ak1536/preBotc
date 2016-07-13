@@ -25,26 +25,27 @@ class Rhs(object):
         s.Vl = -65.0   # -65mV 
         s.Iapp = 0.0    # Zero unless otherwise noted
         s.C = 21.0   # 21pF
+        s.taubarh = 10000
+        s.taubarn = 10
    
     def rhs(self, V , h, n):
         s = self
-        tauhV = 0.010 / (np.cosh((V + 48.0) / (12.0)))     # Conversion from ms to s
-        taunV = 10/ (np.cosh((V + 29.0) / (-8.0))) # Conversion from ms to s
+        tauhV = s.taubarh / (np.cosh((V + 48.0) / (12.0)))     
+        taunV = s.taubarn/ (np.cosh((V + 29.0) / (-8.0))) 
         hinfV = expit((V + 48.0)/ (6.0))
-        minfNaPV = spec.expit((V + 40.0)/ (-6.0))
-        minfNaV = spec.expit((V + 34.0)/ (-5.0))
-        ninfNaV = spec.expit((V + 29.0)/ (-4.0)) 
+        minfNaPV = expit((V + 40.0)/ (-6.0))
+        minfNaV = expit((V + 34.0)/ (-5.0))
+        ninfNaV = expit((V + 29.0)/ (-4.0)) 
         
         # m n h need expit functions
         # V h n are the function parameters
         # dVdt = [- Inaph - INa - IK - IL - Itonice==0 + Iapp==0 ] / C
-        Iapp = 182.000000
         dVdt = (
-                (-s.gNap * minfNaPV * h * (V - s.VNa))
-                + ((-s.gNa * (minfNaV**3) * (1 - n)) * (V - s.VNa))
-                + ((-s.gk * (ninfNaV**4)) * (V - s.Vk))
-                + (-s.gl * (V - s.Vl))
-                + Iapp) / s.C *1000 #Conversion to mV because C is defined in terms of Farad Volts
+                (-1 * (s.gNap * minfNaPV * h * (V - s.VNa)))
+                + (-1 * ((s.gNa * ((minfNaV)**3) * (1 - n)) * (V - s.VNa)))
+                + (-1 * (s.gk * (n**4)) * (V - s.Vk))
+                + (-1 * (s.gl * (V - s.Vl)))
+                )/ s.C * 1000   #Conversion to mV because C is defined in terms of Farad Volts
         dhdt = (hinfV - h) / tauhV 
         dndt = (ninfNaV - n) / taunV
         return dVdt, dhdt, dndt
@@ -81,7 +82,7 @@ r.A = A
 nominal = r.gNa
 r.gNa = np.random.uniform(low = nominal*0.9, high = nominal*1.1, size = (N,))
         
-Xvals, Tvals = r.integrate(0, 1)
+Xvals, Tvals = r.integrate(0, 180)
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 fig = plt.figure()

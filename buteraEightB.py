@@ -39,7 +39,7 @@ class Rhs(object):
         # m n h need expit functions
         # V h n are the function parameters
         # dVdt = [- Inaph - INa - IK - IL - Itonice==0 + Iapp==0 ] / C
-        Iapp = 0.000000
+        Iapp = 40.000000
         dVdt = (
                 (-s.gNap * minfNaPV * h * (V - s.VNa))
                 + ((-s.gNa * (minfNaV**3) * (1 - n)) * (V - s.VNa))
