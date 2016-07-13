@@ -14,40 +14,50 @@ from scipy.special import expit
 class Rhs(object):
     def __init__(self, N):
         s = self
-        s.N = N    # Note that all units are in terms of milli (10**-3)
-        s.A = np.zeros((N , N))
-        s.VNa = 50    # 50mV
-        s.gk = 11.2    # 11.2nS
-        s.Vk = -85.0   # -85mV
-        s.gNap = 2.8    # 2.8nS
-        s.gNa = 28    # 2.8nS
-        s.gl = 2.8    # 2.8nS
-        s.Vl = -65.0   # -65mV 
-        s.Iapp = 0.0    # Zero unless otherwise noted
-        s.C = 21.0   # 21pF
-        s.taubarh = 10000
-        s.taubarn = 10
+        s.N = N
+        s.A = np.zeros((N, N))
+        s.ENa = 50          # mV
+        s.gkBar = 11.2      # nS
+        s.Ek = -85.0        # mV
+        s.gNaPBar = 2.8     # nS
+        s.gNaBar = 28.0     # nS
+        s.gLBar = 2.8       # nS
+        s.EL = -65.0        # mV 
+        s.Iapp = 0.0        # pA; Zero unless otherwise noted
+        s.C = 21.0          # pF
+        s.taubarh = 10000.  # mS
+        s.taubarn = 10.     # mS
+        s.thetah = -48.0    # mV
+        s.thetan = -29.0    # mV
+        s.thetamNaP = -40.0 # mV
+        s.thetamNa = -34    # mV
+        s.sigmah = 6.0      # mV
+        s.sigman = -4       # mV
+        s.sigmamNaP = -6.0  # mV
+        s.sigmamNa = -5.0   # mV
+        
    
-    def rhs(self, V , h, n):
+    def rhs(self, V, h, n):
         s = self
-        tauhV = s.taubarh / (np.cosh((V + 48.0) / (12.0)))     
-        taunV = s.taubarn/ (np.cosh((V + 29.0) / (-8.0))) 
-        hinfV = expit((48.0 - V)/ (6.0))
-        minfNaPV = expit((40.0 - V)/ (-6.0))
-        minfNaV = expit((34.0 - V)/ (-5.0))
-        ninfNaV = expit((29.0 - V)/ (-4.0)) 
+        tauhV = s.taubarh / (np.cosh((V - s.thetah) / 2 / s.sigmah))     
+        taunV = s.taubarn / (np.cosh((V - s.thetan) / 2 / s.sigman)) 
+        hinfV = expit((s.thetah - V) / s.sigmah)
+        minfNaPV = expit((s.thetamNaP - V) / s.sigmamNaP)
+        minfNaV = expit((s.thetamNa - V) / s.sigmamNa)
+        ninfV = expit((s.thetan - V) / s.sigman)
         
         # m n h need expit functions
         # V h n are the function parameters
         # dVdt = [- Inaph - INa - IK - IL - Itonice==0 + Iapp==0 ] / C
         dVdt = ( 
-                -(s.gNap * minfNaPV * h * (V - s.VNa))
-                - ((s.gNa * ((minfNaV)**3) * (1 - n)) * (V - s.VNa))
-                - (s.gk * (n**4)) * (V - s.Vk)
-                - (s.gl * (V - s.Vl)) + s.Iapp
-                )/ s.C  #Conversion to mV because C is defined in terms of Farad Volts
+                - s.gNaPBar * minfNaPV * h * (V - s.ENa)         # -I_{NaP} = I_{NaP-h} for model 1. (\neq I_{Na})
+                - s.gNaBar * minfNaV**3 * (1 - n) * (V - s.ENa)  # -I_{Na}
+                - s.gkBar * n**4 * (V - s.Ek)                    # -I_K
+                - s.gLBar * (V - s.EL)                           # -I_L
+                + s.Iapp
+                ) / s.C  * 1000 # Conversion to mV. Naturally in terms of V/s without this.
         dhdt = (hinfV - h) / tauhV 
-        dndt = (ninfNaV - n) / taunV
+        dndt = (ninfV - n) / taunV
         return dVdt, dhdt, dndt
     
     def __call__(self, X, t):
@@ -80,10 +90,10 @@ for i in range(N):
         else:
             A[i, j] = A[j, i]
 r.A = A
-nominal = r.gNa
-r.gNa = np.random.uniform(low = nominal*0.9, high = nominal*1.1, size = (N,))
+nominal = r.gNaBar
+r.gNaBar = np.random.uniform(low = nominal*0.9, high = nominal*1.1, size = (N,))
         
-Xvals, Tvals = r.integrate(0, 50)
+Xvals, Tvals = r.integrate(0, 20)
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 fig = plt.figure()
@@ -91,8 +101,8 @@ ax = fig.add_subplot(1,1,1, projection = "3d")
 X = Xvals.reshape(Tvals.size, 3, N)
 Vi = X[500, 0, :]
 # Vi = Xvals[500, :N]
-ax.scatter(r.gNa, r.A.sum(1), Vi)
-ax.set_xlabel('gNa [nS]')
+ax.scatter(r.gNaBar, r.A.sum(1), Vi)
+ax.set_xlabel('gNaBar [nS]')
 ax.set_ylabel('degree')
 ax.set_zlabel('V [mV]')
 
