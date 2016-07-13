@@ -6,7 +6,6 @@ Created on Jul 11, 2016
 
 import numpy as np
 from scipy.integrate import odeint 
-import scipy.special as spec
 import matplotlib.pyplot as plt
 from scipy.special import expit
 
@@ -19,11 +18,11 @@ class Rhs(object):
         s.ENa = 50          # mV
         s.gkBar = 11.2      # nS
         s.Ek = -85.0        # mV
-        s.gNaPBar = 2.8     # nS
+        s.gNaPBar = 2.8     # nS  # TODO: Is this or gNaBar a typo in the paper?
         s.gNaBar = 28.0     # nS
         s.gLBar = 2.8       # nS
         s.EL = -65.0        # mV 
-        s.Iapp = 10.0        # pA; Zero unless otherwise noted
+        s.Iapp = 20.0        # pA; Zero unless otherwise noted
         s.C = 21.0          # pF
         s.tauBarh = 10.     # s
         s.tauBarn = 0.010   # s
@@ -42,9 +41,9 @@ class Rhs(object):
         tauhV = s.tauBarh / (np.cosh((V - s.thetah) / 2 / s.sigmah))     
         taunV = s.tauBarn / (np.cosh((V - s.thetan) / 2 / s.sigman)) 
         hinfV = expit((s.thetah - V) / s.sigmah)
+        ninfV = expit((s.thetan - V) / s.sigman)
         minfNaPV = expit((s.thetamNaP - V) / s.sigmamNaP)
         minfNaV = expit((s.thetamNa - V) / s.sigmamNa)
-        ninfV = expit((s.thetan - V) / s.sigman)
         
         # m n h need expit functions
         # V h n are the function parameters
@@ -67,17 +66,18 @@ class Rhs(object):
         n = X[(2*N):(3*N)]
         dVdt, dhdt, dndt = self.rhs(V, h, n)
         out = np.hstack((dVdt.reshape(N, ), dhdt.reshape(N, ), dndt.reshape(N, )))
-        return out 
+        return out
+    
     def integrate(self, tmin, tmax, Nvals=1000):
         N = self.N
         Tvals = np.linspace(tmin, tmax, Nvals)
-        Xvals = odeint(self,np.zeros((3*N, )),Tvals) 
+        Xvals = odeint(self,np.zeros((3*N, )), Tvals) 
         return Xvals, Tvals
     
         
         
 
-N = 64
+N = 1
 V = np.zeros((N , 1))
 h = np.zeros((N , 1))
 n = np.zeros((N , 1))
@@ -93,21 +93,24 @@ r.A = A
 nominal = r.gNaBar
 r.gNaBar = np.random.uniform(low = nominal*0.9, high = nominal*1.1, size = (N,))
         
-Xvals, Tvals = r.integrate(0, 20)
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-fig = plt.figure()
-ax = fig.add_subplot(1,1,1, projection = "3d")
-X = Xvals.reshape(Tvals.size, 3, N)
-Vi = X[500, 0, :]
-# Vi = Xvals[500, :N]
-ax.scatter(r.gNaBar, r.A.sum(1), Vi)
-ax.set_xlabel('gNaBar [nS]')
-ax.set_ylabel('degree')
-ax.set_zlabel('V [mV]')
+states, times = r.integrate(0, 20)
+X = states.reshape(times.size, 3, N)
 
+
+# # Plot PCE-fittable surface.
+# from mpl_toolkits.mplot3d import Axes3D
+# fig = plt.figure()
+# ax = fig.add_subplot(1,1,1, projection = "3d")
+# Vi = X[500, 0, :]
+# # Vi = states[500, :N]
+# ax.scatter(r.gNaBar, r.A.sum(1), Vi)
+# ax.set_xlabel('gNaBar [nS]')
+# ax.set_ylabel('degree')
+# ax.set_zlabel('V [mV]')
+
+# Plot voltage trajectories.
 fig, ax = plt.subplots()
-ax.plot(Tvals, X[:, 0, :])
+ax.plot(times, X[:, 0, :])
 ax.set_xlabel('Time')
 ax.set_ylabel('MilliVolts')
 plt.show()
