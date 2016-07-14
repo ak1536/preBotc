@@ -10,7 +10,7 @@ def findClosest(vec, val, start = 0):
     plt.title('target = %s' % val)
     plt.show()
     for i in range(start, len(vec)):
-        if abs(vec[i] - 12.5) < abs(vec[i + 1] - 12.5):
+        if abs(vec[i] - val) < abs(vec[i + 1] - val):
             return i
         else:
             vec[i] = vec[i + 1]
