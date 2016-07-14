@@ -9,6 +9,7 @@ from scipy.integrate import odeint
 import matplotlib.pyplot as plt
 from scipy.special import expit
 from integration import integrate
+from utils import findClosest
 
 
 class Rhs(object):
@@ -22,8 +23,8 @@ class Rhs(object):
         s.gNaPBar = 2.8     # nS  # TODO: Is this or gNaBar a typo in the paper?
         s.gNaBar = 28.0     # nS
         s.gLBar = 2.8       # nS
-        s.EL = -65.0        # mV 
-        s.Iapp = 20.0        # pA; Zero unless otherwise noted
+        s.EL = -60.0        # mV 
+        s.Iapp = 0.0        # pA; Zero unless otherwise noted
         s.C = 21.0          # pF
         s.tauBarh = 10.     # s
         s.tauBarn = 0.010   # s
@@ -71,9 +72,8 @@ class Rhs(object):
     
     def integrate(self, initial, tmin, tmax, **kwargs):
         return integrate(initial, self, tmin, tmax, giveTime=True, **kwargs)
-    
-        
-        
+
+  
 
 N = 1
 V = np.zeros((N , 1))
@@ -93,6 +93,7 @@ r.gNaBar = np.random.uniform(low = nominal*0.9, high = nominal*1.1, size = (N,))
         
 X0 = np.zeros((3*N,))
 states, times = r.integrate(X0, 0, 20, progressBar='IVP ')
+i = findClosest(times, 20)
 X = states.reshape(times.size, 3, N)
 
 
@@ -109,11 +110,11 @@ X = states.reshape(times.size, 3, N)
 
 # Plot voltage trajectories.
 fig, ax = plt.subplots()
-ax.plot(times, X[:, 0, :])
+ax.plot(times[i:], X[i:, 0, :])
 ax.set_xlabel('Time')
 ax.set_ylabel('MilliVolts')
 plt.show()
-
+print i
 
 
 
