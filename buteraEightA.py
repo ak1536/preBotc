@@ -8,6 +8,7 @@ import numpy as np
 from scipy.integrate import odeint 
 import matplotlib.pyplot as plt
 from scipy.special import expit
+from integration import integrate
 
 
 class Rhs(object):
@@ -68,11 +69,8 @@ class Rhs(object):
         out = np.hstack((dVdt.reshape(N, ), dhdt.reshape(N, ), dndt.reshape(N, )))
         return out
     
-    def integrate(self, tmin, tmax, Nvals=1000):
-        N = self.N
-        Tvals = np.linspace(tmin, tmax, Nvals)
-        Xvals = odeint(self,np.zeros((3*N, )), Tvals) 
-        return Xvals, Tvals
+    def integrate(self, initial, tmin, tmax, **kwargs):
+        return integrate(initial, self, tmin, tmax, giveTime=True, **kwargs)
     
         
         
@@ -93,7 +91,8 @@ r.A = A
 nominal = r.gNaBar
 r.gNaBar = np.random.uniform(low = nominal*0.9, high = nominal*1.1, size = (N,))
         
-states, times = r.integrate(0, 20)
+X0 = np.zeros((3*N,))
+states, times = r.integrate(X0, 0, 20, progressBar='IVP ')
 X = states.reshape(times.size, 3, N)
 
 
