@@ -4,19 +4,17 @@ Created on Jul 14, 2016
 @author: andrewkennedy
 '''
 
-def findClosest(vec, val, start = 0):
-    import matplotlib.pyplot as plt
-    plt.plot(vec)
-    plt.title('target = %s' % val)
-    plt.show()
-    for i in range(start, len(vec)):
-        if abs(vec[i] - val) < abs(vec[i + 1] - val):
-            return i
-        else:
-            vec[i] = vec[i + 1]
-        
-    pass
+def findClosest(vec, val):
+    currentBest = 0
+    lowness = lambda x : abs(x - val)
+    bestValue = lambda : vec[currentBest]
+    for i in range(len(vec)):
+        if lowness(vec[i]) < lowness(bestValue()):
+            currentBest = i
+    return currentBest
     
 if __name__ == '__main__':
-    print findClosest(range(30), 12.5)
+    print findClosest(range(30), 12.7)
+
+   
 

@@ -74,50 +74,56 @@ class Rhs(object):
         return integrate(initial, self, tmin, tmax, giveTime=True, **kwargs)
 
   
-
-N = 1
-V = np.zeros((N , 1))
-h = np.zeros((N , 1))
-n = np.zeros((N , 1))
-r = Rhs(N)
-A = np.random.uniform(low = 0, high = 1, size = (N, N))
-for i in range(N):
-    for j in range(i, N):
-        if i == j :
-            A[i, j] = 0
-        else:
-            A[i, j] = A[j, i]
-r.A = A
-nominal = r.gNaBar
-r.gNaBar = np.random.uniform(low = nominal*0.9, high = nominal*1.1, size = (N,))
+if __name__ == '__main__':
+            
+    N = 1
+    V = np.zeros((N , 1))
+    h = np.zeros((N , 1))
+    n = np.zeros((N , 1))
+    r = Rhs(N)
+    A = np.random.uniform(low = 0, high = 1, size = (N, N))
+    for i in range(N):
+        for j in range(i, N):
+            if i == j :
+                A[i, j] = 0
+            else:
+                A[i, j] = A[j, i]
+    r.A = A
+    nominal = r.gNaBar
+    r.gNaBar = np.random.uniform(low = nominal*0.9, high = nominal*1.1, size = (N,))
+    for EL in -65.0, -60.0, -57.5, -54.0:
+        r.EL = EL
+        X0 = np.zeros((3*N,))
+        states, times = r.integrate(X0, 0, 32, progressBar='IVP ')
+        i = findClosest(times, 20)
+        X = states.reshape(times.size, 3, N)
         
-X0 = np.zeros((3*N,))
-states, times = r.integrate(X0, 0, 20, progressBar='IVP ')
-i = findClosest(times, 20)
-X = states.reshape(times.size, 3, N)
-
-
-# # Plot PCE-fittable surface.
-# from mpl_toolkits.mplot3d import Axes3D
-# fig = plt.figure()
-# ax = fig.add_subplot(1,1,1, projection = "3d")
-# Vi = X[500, 0, :]
-# # Vi = states[500, :N]
-# ax.scatter(r.gNaBar, r.A.sum(1), Vi)
-# ax.set_xlabel('gNaBar [nS]')
-# ax.set_ylabel('degree')
-# ax.set_zlabel('V [mV]')
-
-# Plot voltage trajectories.
-fig, ax = plt.subplots()
-ax.plot(times[i:], X[i:, 0, :])
-ax.set_xlabel('Time')
-ax.set_ylabel('MilliVolts')
-plt.show()
-print i
-
-
-
-
-
-
+        
+        # # Plot PCE-fittable surface.
+        # from mpl_toolkits.mplot3d import Axes3D
+        # fig = plt.figure()
+        # ax = fig.add_subplot(1,1,1, projection = "3d")
+        # Vi = X[500, 0, :]
+        # # Vi = states[500, :N]
+        # ax.scatter(r.gNaBar, r.A.sum(1), Vi)
+        # ax.set_xlabel('gNaBar [nS]')
+        # ax.set_ylabel('degree')
+        # ax.set_zlabel('V [mV]')
+        
+        # Plot voltage trajectories.
+        fig, ax = plt.subplots()
+        ax.plot(times[i:], X[i:, 0, :])
+        ax.set_xlabel('Time (s)')
+        ax.set_ylabel('MilliVolts')
+        ax.set_title('$E_L = %s [mV]$' % EL)
+        ax.set_xlim((min(times[i:]), max(times[i:])))
+        ax.set_ylim(-65, 10)
+        
+        fig.savefig('buteraA_bursts-EL%s.png' % EL)
+    plt.show()
+        
+        
+        
+        
+        
+        
