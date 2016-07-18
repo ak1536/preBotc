@@ -40,6 +40,7 @@ class Rhs(object):
         s.gt = 0.35         # nS
         s.Etonic = 0        # mV
         
+        
    
     def rhs(self, V, h, n):
         s = self
