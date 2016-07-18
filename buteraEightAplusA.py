@@ -43,7 +43,7 @@ class Rhs(object):
         s.thetaApce = -30.0   # mV
         
    
-    def rhs(self, V, h, n):
+    def rhs(self, V, h, n, Apce):
         s = self
         tauhV = s.tauBarh / (np.cosh((V - s.thetah) / 2 / s.sigmah))     
         taunV = s.tauBarn / (np.cosh((V - s.thetan) / 2 / s.sigman)) 
@@ -114,40 +114,38 @@ if __name__ == '__main__':
     X = states.reshape(times.size, 4, N)
         
         
-        # # Plot PCE-fittable surface.
-        # from mpl_toolkits.mplot3d import Axes3D
-        # fig = plt.figure()
-        # ax = fig.add_subplot(1,1,1, projection = "3d")
-        # Vi = X[500, 0, :]
-        # # Vi = states[500, :N]
-        # ax.scatter(r.gNaBar, r.A.sum(1), Vi)
-        # ax.set_xlabel('gNaBar [nS]')
-        # ax.set_ylabel('degree')
-        # ax.set_zlabel('V [mV]')
-        
-        
-            # Plot voltage trajectories.
-        fig, Ax = plt.subplots(nrows=4)
-        ax = Ax[0]
-        bx = Ax[1]
-        cx = Ax[2]
-        dx = Ax[3]
-        ax.plot(times[i:], X[i:, 0, :])
-        ax.set_ylabel('MilliVolts')
-        ax.set_title('$E_L = %s [mV]$' % EL)
+    # # Plot PCE-fittable surface.
+    # from mpl_toolkits.mplot3d import Axes3D
+    # fig = plt.figure()
+    # ax = fig.add_subplot(1,1,1, projection = "3d")
+    # Vi = X[500, 0, :]
+    # # Vi = states[500, :N]
+    # ax.scatter(r.gNaBar, r.A.sum(1), Vi)
+    # ax.set_xlabel('gNaBar [nS]')
+    # ax.set_ylabel('degree')
+    # ax.set_zlabel('V [mV]')
+    
+    
+    # Plot voltage trajectories.
+    fig, Ax = plt.subplots(nrows=4)
+    fig.suptitle('$E_L = %s [mV]$' % EL)
+    for k in range(4):
+        ax = Ax[k]
+        ax.plot(times[i:], X[i:, k, :])
+        ax.set_ylabel(['V [mV]', 'h', 'n', 'A'][k])
         for a in Ax:
             a.set_xlim((min(times[i:]), max(times[i:])))
-        ax.set_xticks([])
-        ax.set_ylim(-65, 10)
-     
-        
-        fig.subplots_adjust(hspace=0)
-        fig, ax = plt.subplots()
-        ax.plot(X[i:, 1, :], X[i:, 3, :])
-        ax.set_ylabel('A')
-        ax.set_xlabel('h')
-        
-        fig.savefig('buteraA_bursts-EL%s.png' % EL)
+        if k != 3:
+            ax.set_xticks([])
+    
+    fig.subplots_adjust(hspace=0)
+    
+    fig, ax = plt.subplots()
+    ax.plot(X[i:, 1, :], X[i:, 3, :])
+    ax.set_ylabel('A')
+    ax.set_xlabel('h')
+    
+    fig.savefig('buteraA_bursts-EL%s.png' % EL)
     plt.show()
         
         
