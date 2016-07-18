@@ -16,6 +16,7 @@ class Rhs(object):
     def __init__(self, N):
         s = self
         s.N = N
+        s.numVarsPerCell = 3
         s.A = np.zeros((N, N))
         s.ENa = 50          # mV
         s.gkBar = 11.2      # nS
@@ -36,6 +37,8 @@ class Rhs(object):
         s.sigman = -4       # mV
         s.sigmamNaP = -6.0  # mV
         s.sigmamNa = -5.0   # mV
+        s.gt = 0.35         # nS
+        s.Etonic = 0        # mV
         
    
     def rhs(self, V, h, n):
@@ -55,6 +58,7 @@ class Rhs(object):
                 - s.gNaBar * minfNaV**3 * (1 - n) * (V - s.ENa)  # -I_{Na}
                 - s.gkBar * n**4 * (V - s.Ek)                    # -I_K
                 - s.gLBar * (V - s.EL)                           # -I_L
+                - s.gt * (V - s.Etonic)                          # -I_tonic
                 + s.Iapp
                 ) / s.C  * 1000 # Conversion to mV. Naturally in terms of V/s without this.
         dhdt = (hinfV - h) / tauhV 
@@ -63,11 +67,12 @@ class Rhs(object):
     
     def __call__(self, X, t):
         N = self.N
-        V = X[(0*N):(1*N)]
-        h = X[(1*N):(2*N)]
-        n = X[(2*N):(3*N)]
-        dVdt, dhdt, dndt = self.rhs(V, h, n)
-        out = np.hstack((dVdt.reshape(N, ), dhdt.reshape(N, ), dndt.reshape(N, )))
+        variables = [
+                X[(k*N):((k+1)*N)]
+                for k in range(self.numVarsPerCell)
+                ]
+        dXdt = self.rhs(*variables)
+        out = np.hstack(dXdt)
         return out
     
     def integrate(self, initial, tmin, tmax, **kwargs):
