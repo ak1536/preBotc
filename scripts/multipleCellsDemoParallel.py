@@ -10,7 +10,7 @@ from prebotc.buteraMultipleCells import Rhs
 from progressbar import ProgressBar, Bar, ETA
 from joblib import Parallel, delayed
 
-EL = -60.0
+EL = -65.0
 
 def job(datum):
     gsynebar, gtonice, k, j = datum
@@ -18,7 +18,7 @@ def job(datum):
     
     N = 2
     wastedTime = 60
-    tmax = wastedTime + 15
+    tmax = wastedTime + 20
     r = Rhs(N)
     r.gsyn = gsynebar * (np.ones((N, N)) - np.eye(N))
     r.gt = gtonice
@@ -54,10 +54,10 @@ def job(datum):
     
 def main():
     # gsynebarVals = [0, 1, 2, 10, 12, 15]
-    # gsynebarVals = [15, 12, 10, 2, 1, 0]
-    gsynebarVals = [12, 10]
-    # gtoniceVals = [0.2, 0.3, 0.4, 0.7, 1.]
-    gtoniceVals = [0.4, 0.7]
+#     gsynebarVals = [15, 12, 10, 2, 1, 0]
+    gsynebarVals = [0, 1]
+#     gtoniceVals = [0.2, 0.3, 0.4, 0.7, 1.]
+    gtoniceVals = [0.3, 0.4, 0.7]
     # gsynebarVals = [0, 12]
     # gtoniceVals = [0.2, .3]
     
@@ -85,7 +85,7 @@ def main():
     for res in result:
         plot(*res)
     
-    fig.savefig('../doc/buteraB_grid_Parallel-EL%s.png' % EL)
+    fig.savefig('../doc/buteraB_grid_Parallel_Rows45_80_s-EL%s.png' % EL)
     plt.show()
     
 if __name__ == '__main__':

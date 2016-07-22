@@ -25,7 +25,7 @@ class Rhs(object):
         s.gNaPBar = 2.8     # nS  # TODO: Is this or gNaBar a typo in the paper?
         s.gNaBar = 28.0     # nS
         s.gLBar = 2.8       # nS
-        s.EL = -65.0        # mV 
+        s.EL = -65.0        # mV Original 
         s.Iapp = 0.0        # pA; Zero unless otherwise noted
         s.C = 21.0          # pF
         s.tauBarh = 10.0     # s
