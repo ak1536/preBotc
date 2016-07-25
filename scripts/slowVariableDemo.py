@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from prebotc.utils import findClosest
 from prebotc.buteraSlowVariable import Rhs
 
-N = 1
+N = 2
 V = np.zeros((N , 1))
 h = np.zeros((N , 1))
 n = np.zeros((N , 1))
@@ -19,9 +19,10 @@ for i in range(N):
 r.A = A
 nominal = r.gNaBar
 r.gNaBar = np.random.uniform(low = nominal*0.9, high = nominal*1.1, size = (N,))
-EL = -65.0
+EL = -60.0
 r.EL = EL
 X0 = np.hstack([
+                np.zeros(N,),
                 np.zeros(N,),
                 np.zeros(N,),
                 np.zeros(N,),
@@ -29,7 +30,7 @@ X0 = np.hstack([
                 ])
 states, times = r.integrate(X0, 0, 32, progressBar='IVP ')
 i = findClosest(times, 20)
-X = states.reshape(times.size, 4, N)
+X = states.reshape(times.size, 5, N)
     
     
 # # Plot PCE-fittable surface.
@@ -45,23 +46,23 @@ X = states.reshape(times.size, 4, N)
 
 
 # Plot voltage trajectories.
-fig, Ax = plt.subplots(nrows=4)
-fig.suptitle('$E_L = %s [mV]$' % EL)
-for k in range(4):
+fig1, Ax = plt.subplots(nrows=5)
+fig1.suptitle('$E_L = %s [mV]$' % EL)
+for k in range(5):
     ax = Ax[k]
     ax.plot(times[i:], X[i:, k, :])
-    ax.set_ylabel(['V [mV]', 'h', 'n', 'A'][k])
+    ax.set_ylabel(['V [mV]', 'h', 'n', 'S', 'A'][k])
     for a in Ax:
         a.set_xlim((min(times[i:]), max(times[i:])))
     if k != 3:
         ax.set_xticks([])
+fig1.subplots_adjust(hspace=0)
 
-fig.subplots_adjust(hspace=0)
-
-fig, ax = plt.subplots()
-ax.plot(X[i:, 1, :], X[i:, 3, :])
+fig2, ax = plt.subplots()
+ax.plot(X[i:, 1, :], X[i:, 4, :])
 ax.set_ylabel('A')
 ax.set_xlabel('h')
 
-fig.savefig('../doc/buteraA_bursts-EL%s.png' % EL)
+fig1.savefig('../doc/buteraB-network_VhnSA-EL%s.png' % EL)
+fig2.savefig('../doc/buteraB-network_h_A_ring-EL%s.png' % EL)
 plt.show()
