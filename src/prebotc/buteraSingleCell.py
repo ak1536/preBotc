@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from scipy.special import expit
 from integration import integrate
 from utils import findClosest
+from progressbar import ProgressBar, Bar, ETA
 
 
 class Rhs(object):
@@ -94,11 +95,21 @@ if __name__ == '__main__':
                 A[i, j] = 0
             else:
                 A[i, j] = A[j, i]
+
     r.A = A
     nominal = r.gNaBar
     r.gNaBar = np.random.uniform(low = nominal*0.9, high = nominal*1.1, size = (N,))
-    for EL in -65.0, -60.0, -57.5, -54.0:
-        r.EL = EL
+    ELarray = [-65.0, -60.0, -57.5, -54.0]  
+    fig, Ax = plt.subplots(nrows=len(ELarray), ncols=1) 
+    pbar = ProgressBar(widgets=['grid plot ', ETA(), ' ', Bar()],   
+                   maxval=len(ELarray))
+    pbar.start()    
+    subplotNumber = -1
+   
+    for k, ELvalues in enumerate(ELarray):
+        subplotNumber += 1
+        pbar.update(subplotNumber)  
+        r.EL = ELvalues
         X0 = np.zeros((3*N,))
         states, times = r.integrate(X0, 0, 32, progressBar='IVP ')
         i = findClosest(times, 20)
@@ -116,19 +127,28 @@ if __name__ == '__main__':
         # ax.set_ylabel('degree')
         # ax.set_zlabel('V [mV]')
         
-        # Plot voltage trajectories.
-        fig, ax = plt.subplots()
+        fig.suptitle('$E_L = %s [mV]$' % ELvalues)
+        ax = Ax[k]
+        ax.set_title('$E_L=%.2f$' % (ELvalues,))
         ax.plot(times[i:], X[i:, 0, :])
-        ax.set_xlabel('Time (s)')
-        ax.set_ylabel('MilliVolts')
-        ax.set_title('$E_L = %s [mV]$' % EL)
+        ax.set_ylabel('V [mV]')
         ax.set_xlim((min(times[i:]), max(times[i:])))
-        ax.set_ylim(-65, 10)
-        
-        fig.savefig('buteraA_bursts-EL%s.png' % EL)
-    plt.show()
-        
-        
+        ax.set_xticks([])
+        ax.set_yticks([])
+        # Plot voltage trajectories.
+#         fig, ax = plt.subplots()
+#         ax.plot(times[i:], X[i:, 0, :])
+#         ax.set_xlabel('Time (s)')
+#         ax.set_ylabel('MilliVolts')
+#         ax.set_title('$E_L = %s [mV]$' % EL)
+#         ax.set_xlim((min(times[i:]), max(times[i:])))
+#         ax.set_ylim(-65, 10)
+         
+pbar.finish()
+fig.savefig('buteraA_bursts_test_subplots-EL%s.png' % ELvalues)
+plt.show()
+         
+         
         
         
         
