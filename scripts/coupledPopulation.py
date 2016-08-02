@@ -7,7 +7,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from prebotc.utils import findClosest
 from prebotc.buteraMultipleCells import Rhs
-from progressbar import ProgressBar, Bar, ETA
 
 N = 12
 ntonic = 4
@@ -27,7 +26,8 @@ gsynebar = 1  # Strength of connections in the network.
 r = Rhs(N)
 r.gsyn = gsynebar * (np.ones((N, N)) - np.eye(N))  # All-all connection without self-loops.
 r.gt = np.array(gtonice)
-r.EL = -60.0  # Cells are more excitable when this gets closer to 0 (less negative).
+# Cells are more excitable when this gets closer to 0 (less negative).
+r.EL = np.linspace(-61., -59., N)
 
 X0 = np.hstack([
                 np.zeros(N,),
