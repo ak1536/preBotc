@@ -7,9 +7,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from prebotc.utils import findClosest
 from prebotc.buteraMultipleCells import Rhs
+import matplotlib.animation as animation
+from progressbar import ProgressBar, ETA, Bar
 
 N = 12
-ntonic = 4
+ntonic = 1
 assert ntonic < N
 V = np.zeros((N, 1))
 h = np.zeros((N, 1))
@@ -27,7 +29,12 @@ r = Rhs(N)
 r.gsyn = gsynebar * (np.ones((N, N)) - np.eye(N))  # All-all connection without self-loops.
 r.gt = np.array(gtonice)
 # Cells are more excitable when this gets closer to 0 (less negative).
-r.EL = np.linspace(-61., -59., N)
+r.EL = np.random.uniform(low=-61.5, high=-61, size=(N,))
+
+def PbarETA(label, maxval=1):
+    return ProgressBar(maxval=maxval, widgets=[label, ' | ', ETA(), Bar()]).start()
+    
+
 
 X0 = np.hstack([
                 np.zeros(N,),
@@ -36,7 +43,7 @@ X0 = np.hstack([
                 np.zeros(N,),
                 ])
 
-states, times = r.integrate(X0, 0, tmax, progressBar=True)
+states, times = r.integrate(X0, 0, tmax, progressBar=True, rtol=1e-3, atol=1e-3)
 i = findClosest(times, wastedTime)
 X = states.reshape(times.size, 4, N) # variables are V, h, n, s
     
@@ -68,7 +75,42 @@ ax.set_title(r'$\bar{g}_{syn,e}=%f$, $g_{tonic,e}=%f$ for last %d of %d cells' %
 ax.plot(times[i:], X[i:, 1, :], color='red')
 ax.set_ylabel('$h$')
 ax.set_xlim((min(times[i:]), max(times[i:])))
-    
 
-fig.savefig('../doc/buteraB_population-EL%s-N%d.png' % (r.EL, N))
-plt.show()
+fig.savefig('../doc/buteraB_population-N%d.png' % (N,))
+
+
+## Make a movie.
+fig, ax = plt.subplots()
+
+fps = 15
+framenumbers = range(int((max(times) - min(times))*fps))
+
+# Find the indices into the trajectory corresponding to 
+frameTimeIndices = []
+lasti = 0
+for t in PbarETA('Finding frame times.')(np.linspace(min(times), max(times), len(framenumbers))):
+    nexti = lasti + findClosest(times[lasti:], t)
+    frameTimeIndices.append(nexti)
+    lasti = frameTimeIndices[-1]
+              
+
+pbar = PbarETA('Animating.', maxval=max(framenumbers))
+def updateFrame(frame):
+    pbar.update(frame)
+    frame = frameTimeIndices[frame]
+    ax.cla()
+    h = X[:, 1, :]
+    ax.scatter(r.EL, h[frame])
+    ax.set_ylim(h.min(), h.max())
+    ax.set_xlabel('$E_L$ [mV]')
+    ax.set_ylabel('$h$')
+    ax.set_title('$t=%.1f$ [s]' % times[frame])
+anim = animation.FuncAnimation(fig, updateFrame, framenumbers)
+Writer = animation.writers['ffmpeg']
+writer = Writer(fps=fps, metadata=dict(artist='Tom Bertalan'), bitrate=1800)
+anim.save('ELhet-N%d-%dtonic.mp4' % (N, ntonic), writer=writer)
+pbar.finish()
+
+
+## Show plots and animation.
+#plt.show()
